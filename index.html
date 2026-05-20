@@ -53,14 +53,14 @@
             <option value="Visitante">Visitante Externo</option>
           </select>
           <input type="text" id="nomeAluno" placeholder="Nome Completo" required>
-          <input type="email" id="emailAluno" placeholder="E-mail Pessoal" required>
+          <input type="email" id="emailAluno" placeholder="E-mail Institucional ou Pessoal" required>
           <button type="button" id="btnSalvarAluno" onclick="salvarNovoAluno()">Gerar Meu QR Code</button>
         </div>
 
         <div id="telaQR" class="hidden">
           <p style="font-size: 14px; color: #4a5568; text-align: center;">Tire um print ou verifique seu e-mail!</p>
           <div style="text-align: center; margin: 15px 0;">
-            <img id="imgQR" src="" style="border: 4px solid #e2e8f0; border-radius: 8px; width: 200px; height: 200px;">
+            <img id="imgQR" src="" style="border: 4px solid #e2e8f0; border-radius: 8px; width: 200px; height: 200px; display: inline-block;">
           </div>
           <button type="button" style="background: #718096;" onclick="window.location.reload()">Voltar ao Início</button>
         </div>
@@ -97,10 +97,8 @@
     <a class="admin-link" onclick="ativarModoFiscal()">🔒 Terminal da Diretoria</a>
 
     <script>
-      // =========================================================
-      // CONEXÃO COM O SERVIDOR (API)
-      // =========================================================
-      const URL_API_SERVIDORES = 'https://script.google.com/macros/s/AKfycbyv8q2rTrvYAE_-6c2y0uYsFLaeSyUm5BZm7iSg7hLjBDfaDWgnAJQhtGl8vfaQRtgCZQ/exec';
+      // CONFIGURAÇÃO DO ENDPOINT ATUALIZADO DO SERVIDOR COFRE
+      const URL_API_SERVIDORES = 'https://script.google.com/macros/s/AKfycbyXx6Q1n6tBJGuE6zVYRAQz2vDUsr_CkkNZzsKgAnmfPfPf58_kHHzdf72KKA4i3xv7/exec';
       
       let cacheId = "";
       let senhaAutenticada = "";
@@ -114,25 +112,23 @@
 
       function tratarFalhaServidor(erro) {
         document.querySelectorAll('button').forEach(btn => btn.disabled = false);
-        mostrarAviso("⚠️ Falha de Conexão. Verifique sua internet.", "erro");
+        mostrarAviso("⚠️ Erro de execução. Tente novamente.", "erro");
+        console.error(erro);
       }
 
-      async function executarChamadaAPI(dadosEnvio) {
+      async function ejecutarChamadaAPI(dadosEnvio) {
         dadosEnvio.apiKey = "LAIFT_API_2026"; 
-
-        // O 'mode: no-cors' força o navegador a enviar os dados mesmo estando em domínios diferentes
+        
         const respostaExecucao = await fetch(URL_API_SERVIDORES, {
           method: 'POST',
-          mode: 'no-cors', 
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'text/plain;charset=utf-8'
           },
+          redirect: 'follow', 
           body: JSON.stringify(dadosEnvio)
         });
         
-        // Como o modo 'no-cors' não permite ler o retorno detalhado por segurança,
-        // nós assumimos o sucesso do envio para descongela a tela do usuário imediatamente.
-        return { registrado: true, sucesso: true, evento: "Atualizado", mensagem: "Comando enviado com sucesso!" };
+        return await respostaExecucao.json();
       }
 
       // --- ÁREA DE ALUNOS ---
@@ -141,7 +137,7 @@
         if(!cacheId) return mostrarAviso('Digite sua matrícula.', 'erro');
         
         document.getElementById('btnAcessarPortal').disabled = true;
-        mostrarAviso('Buscando cadastro...', 'loading');
+        mostrarAviso('Buscando base de dados...', 'loading');
         
         executarChamadaAPI({ acao: 'verificarAluno', id: cacheId })
           .then(res => {
@@ -165,19 +161,21 @@
           nome: document.getElementById('nomeAluno').value.trim(),
           email: document.getElementById('emailAluno').value.trim()
         };
-        if(!dados.nome || !dados.email || !dados.tipo) return mostrarAviso('Preencha tudo.', 'erro');
+        if(!dados.nome || !dados.email || !dados.tipo) return mostrarAviso('Preencha todos os campos.', 'erro');
         
         document.getElementById('btnSalvarAluno').disabled = true;
-        mostrarAviso('Gerando credencial...', 'loading');
+        mostrarAviso('Construindo credencial digital...', 'loading');
         
         executarChamadaAPI({ acao: 'cadastrarAluno', dados: dados })
           .then(res => {
             document.getElementById('btnSalvarAluno').disabled = false;
-            document.getElementById('status').classList.add('hidden');
             if(res.sucesso) {
+              document.getElementById('status').classList.add('hidden');
               document.getElementById('formCadastro').classList.add('hidden');
               document.getElementById('imgQR').src = res.qrcodeUrl;
               document.getElementById('telaQR').classList.remove('hidden');
+            } else {
+              mostrarAviso('❌ Erro no cadastro: ' + res.mensagem, 'erro');
             }
           }).catch(tratarFalhaServidor);
       }
@@ -187,7 +185,7 @@
         const senha = prompt("Terminal Restrito. Digite a senha:");
         if(!senha) return;
 
-        mostrarAviso('Autenticando...', 'loading');
+        mostrarAviso('Verificando chaves de acesso...', 'loading');
         executarChamadaAPI({ acao: 'obterEvento', senha: senha })
           .then(res => {
             document.getElementById('status').classList.add('hidden');
@@ -209,14 +207,14 @@
         if(!novoNome) return;
         
         document.getElementById('btnMudarEvento').disabled = true;
-        mostrarAviso('Atualizando evento...', 'loading');
+        mostrarAviso('Processando atualização de diretrizes...', 'loading');
         
         executarChamadaAPI({ acao: 'salvarEvento', novoNome: novoNome, senha: senhaAutenticada })
           .then(res => {
             document.getElementById('btnMudarEvento').disabled = false;
             if(res.sucesso) {
               document.getElementById('inputNomeEvento').value = res.novoEvento;
-              mostrarAviso('🚀 Evento atualizado para "' + res.novoEvento + '"!', 'sucesso');
+              mostrarAviso('🚀 Evento updated para "' + res.novoEvento + '"!', 'sucesso');
             } else {
               mostrarAviso('❌ ' + res.mensagem, 'erro');
             }
@@ -240,7 +238,7 @@
           }
           document.getElementById('idManualFiscal').value = idExtraido;
           
-          mostrarAviso('QR Code lido! Fechando câmera...', 'loading');
+          mostrarAviso('Leitura efetuada. Fechando barreira...', 'loading');
 
           html5QrcodeScanner.clear().then(() => {
             document.getElementById('reader').classList.add('hidden');
@@ -255,10 +253,10 @@
 
       function validarPresencaFiscal() {
         const id = document.getElementById('idManualFiscal').value.trim();
-        if(!id) return mostrarAviso('Nenhum ID detectado.', 'erro');
+        if(!id) return mostrarAviso('ID não detectado para validação.', 'erro');
         
         document.getElementById('btnCarimbarFiscal').disabled = true;
-        mostrarAviso('⏱️ Carimbando presença no banco de dados...', 'loading');
+        mostrarAviso('⏱️ Analisando dados na planilha central...', 'loading');
         document.getElementById('idManualFiscal').value = ""; 
         
         executarChamadaAPI({ acao: 'carimbarPresenca', id: id, senha: senhaAutenticada })
