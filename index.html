@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LAIFT - Portaria Digital</title>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <style>
+      body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 90vh; margin: 0; }
+      .card { background: white; width: 100%; max-width: 420px; padding: 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); box-sizing: border-box; }
+      .logo-area { font-size: 26px; font-weight: bold; color: #1a365d; margin-bottom: 5px; text-align: center;} 
+      .sub { color: #718096; font-size: 14px; margin-bottom: 25px; text-align: center;} 
+      input, select, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 8px; border: 1px solid #cbd5e0; box-sizing: border-box; font-size: 16px; }
+      input:focus { border-color: #3182ce; outline: none; }
+      button { background-color: #3182ce; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+      button:hover { background-color: #2b6cb0; }
+      button:disabled { background-color: #cbd5e0; cursor: not-allowed; }
+      .btn-qr { background-color: #2d3748; padding: 18px; border-radius: 12px; } .btn-qr:hover { background-color: #1a202c; }
+      .hidden { display: none !important; }
+      #reader { width: 100%; border-radius: 8px; overflow: hidden; margin-bottom: 15px; border: 2px solid #2d3748; }
+      #status { margin-top: 15px; font-weight: bold; padding: 12px; border-radius: 6px; text-align: center; font-size: 15px;}
+      .sucesso { background-color: #c6f6d5; color: #22543d; border: 1px solid #9ae6b4; }
+      .erro { background-color: #fed7d7; color: #742a2a; border: 1px solid #feb2b2; }
+      .loading { background-color: #e2e8f0; color: #4a5568; font-style: italic; }
+      .admin-link { margin-top: 20px; color: #a0aec0; font-size: 12px; text-decoration: none; display: flex; align-items: center; gap: 5px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+      .admin-link:hover { color: #4a5568; }
+      .badge-admin { background: #e53e3e; color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; margin-bottom: 15px; display: inline-block; font-weight: bold;}
+      .bloco-fiscal { background: #f7fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px; text-align: center; }
+      .bloco-fiscal h3 { font-size: 12px; color: #718096; text-transform: uppercase; margin-top: 0; margin-bottom: 10px; letter-spacing: 0.5px; }
+      .divisor { text-align: center; color: #a0aec0; font-size: 12px; font-weight: bold; margin: 15px 0; text-transform: uppercase; }
+    </style>
+  </head>
+  <body>
+
+    <div class="card">
+      <div class="logo-area">LAIFT</div> 
+      <div id="subtitulo" class="sub">Portal de Autoatendimento</div>
+
+      <div id="status" class="hidden"></div>
+
+      <div id="areaPublica">
+        <div id="formIdentidade">
+          <p style="font-size: 14px; color: #4a5568; text-align: center;">Digite sua matrícula para acessar sua credencial.</p>
+          <input type="text" id="idAluno" placeholder="Matrícula ou CPF" required>
+          <button type="button" id="btnAcessarPortal" onclick="acessarPortalAluno()">Acessar Minha Credencial</button>
+        </div>
+
+        <div id="formCadastro" class="hidden">
+          <p style="color: #dd6b20; font-weight: bold; font-size: 14px; text-align: center;">Conclua seu cadastro abaixo:</p>
+          <select id="tipoAluno" required>
+            <option value="" disabled selected>Você é...</option>
+            <option value="Membro">Membro da Liga</option>
+            <option value="Visitante">Visitante Externo</option>
+          </select>
+          <input type="text" id="nomeAluno" placeholder="Nome Completo" required>
+          <input type="email" id="emailAluno" placeholder="E-mail Pessoal" required>
+          <button type="button" id="btnSalvarAluno" onclick="salvarNovoAluno()">Gerar Meu QR Code</button>
+        </div>
+
+        <div id="telaQR" class="hidden">
+          <p style="font-size: 14px; color: #4a5568; text-align: center;">Tire um print ou verifique seu e-mail!</p>
+          <div style="text-align: center; margin: 15px 0;">
+            <img id="imgQR" src="" style="border: 4px solid #e2e8f0; border-radius: 8px; width: 200px; height: 200px;">
+          </div>
+          <button type="button" style="background: #718096;" onclick="window.location.reload()">Voltar ao Início</button>
+        </div>
+      </div>
+
+      <div id="areaFiscal" class="hidden">
+        <div style="text-align: center;"><span class="badge-admin">Terminal de Validação Ativo</span></div>
+        
+        <div class="bloco-fiscal" style="text-align: left;">
+          <h3>Configuração do Evento</h3>
+          <div style="display: flex; gap: 5px;">
+            <input type="text" id="inputNomeEvento" placeholder="Carregando..." style="margin: 0; padding: 10px; font-size: 13px;">
+            <button type="button" id="btnMudarEvento" style="margin: 0; width: auto; padding: 0 15px; font-size: 13px;" onclick="atualizarNomeDoEvento()">Salvar</button>
+          </div>
+        </div>
+
+        <div class="bloco-fiscal">
+          <h3>Check-in Automático</h3>
+          <div id="reader" class="hidden"></div>
+          <button type="button" class="btn-qr" id="btnScanner" onclick="iniciarScannerFiscal()">📷 Escanear QR Code</button>
+          <p style="font-size: 11px; color: #718096; margin-top: 10px;">Confirmação automática após a leitura.</p>
+        </div>
+        
+        <div class="divisor">OU</div>
+        
+        <div class="bloco-fiscal">
+          <h3>Check-in Manual</h3>
+          <input type="text" id="idManualFiscal" placeholder="Digitar Matrícula" style="text-align: center;">
+          <button type="button" id="btnCarimbarFiscal" onclick="validarPresencaFiscal()" style="background-color: #4a5568;">Carimbar Manual</button>
+        </div>
+      </div>
+    </div>
+
+    <a class="admin-link" onclick="ativarModoFiscal()">🔒 Terminal da Diretoria</a>
+
+    <script>
+      // =========================================================
+      // CONEXÃO COM O SERVIDOR (API)
+      // =========================================================
+      const URL_API_SERVIDORES = 'https://script.google.com/macros/s/AKfycbzbNmM2S8LtzkRkvhRNgquc9aBYOsmOKjtK6zu9WGLcbSYoXncITIqKEauxGnSWBLAx/exec';
+      
+      let cacheId = "";
+      let senhaAutenticada = "";
+      let html5QrcodeScanner;
+
+      function mostrarAviso(texto, classe) {
+        const s = document.getElementById('status');
+        s.innerHTML = texto; s.className = classe; s.classList.remove('hidden');
+        s.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      function tratarFalhaServidor(erro) {
+        document.querySelectorAll('button').forEach(btn => btn.disabled = false);
+        mostrarAviso("⚠️ Falha de Conexão. Verifique sua internet.", "erro");
+      }
+
+      async function executarChamadaAPI(dadosEnvio) {
+        dadosEnvio.apiKey = "LAIFT_API_2026"; // Chave de proteção contra robôs
+        const respostaExecucao = await fetch(URL_API_SERVIDORES, {
+          method: 'POST',
+          body: JSON.stringify(dadosEnvio)
+        });
+        return await respostaExecucao.json();
+      }
+
+      // --- ÁREA DE ALUNOS ---
+      function acessarPortalAluno() {
+        cacheId = document.getElementById('idAluno').value.trim();
+        if(!cacheId) return mostrarAviso('Digite sua matrícula.', 'erro');
+        
+        document.getElementById('btnAcessarPortal').disabled = true;
+        mostrarAviso('Buscando cadastro...', 'loading');
+        
+        executarChamadaAPI({ acao: 'verificarAluno', id: cacheId })
+          .then(res => {
+            document.getElementById('btnAcessarPortal').disabled = false;
+            document.getElementById('status').classList.add('hidden');
+            if(res.registrado) {
+              document.getElementById('formIdentidade').classList.add('hidden');
+              document.getElementById('imgQR').src = res.qrcodeUrl;
+              document.getElementById('telaQR').classList.remove('hidden');
+            } else {
+              document.getElementById('formIdentidade').classList.add('hidden');
+              document.getElementById('formCadastro').classList.remove('hidden');
+            }
+          }).catch(tratarFalhaServidor);
+      }
+
+      function salvarNovoAluno() {
+        const dados = {
+          identificador: cacheId,
+          tipo: document.getElementById('tipoAluno').value,
+          nome: document.getElementById('nomeAluno').value.trim(),
+          email: document.getElementById('emailAluno').value.trim()
+        };
+        if(!dados.nome || !dados.email || !dados.tipo) return mostrarAviso('Preencha tudo.', 'erro');
+        
+        document.getElementById('btnSalvarAluno').disabled = true;
+        mostrarAviso('Gerando credencial...', 'loading');
+        
+        executarChamadaAPI({ acao: 'cadastrarAluno', dados: dados })
+          .then(res => {
+            document.getElementById('btnSalvarAluno').disabled = false;
+            document.getElementById('status').classList.add('hidden');
+            if(res.sucesso) {
+              document.getElementById('formCadastro').classList.add('hidden');
+              document.getElementById('imgQR').src = res.qrcodeUrl;
+              document.getElementById('telaQR').classList.remove('hidden');
+            }
+          }).catch(tratarFalhaServidor);
+      }
+
+      // --- ÁREA FISCAL E PORTARIA ---
+      function ativarModoFiscal() {
+        const senha = prompt("Terminal Restrito. Digite a senha:");
+        if(!senha) return;
+
+        mostrarAviso('Autenticando...', 'loading');
+        executarChamadaAPI({ acao: 'obterEvento', senha: senha })
+          .then(res => {
+            document.getElementById('status').classList.add('hidden');
+            if(res.sucesso === false) {
+              alert("Acesso Negado: Senha Incorreta.");
+            } else {
+              senhaAutenticada = senha;
+              document.getElementById('areaPublica').classList.add('hidden');
+              document.getElementById('areaFiscal').classList.remove('hidden');
+              document.getElementById('subtitulo').innerText = "Terminal de Validação";
+              document.querySelector('.admin-link').classList.add('hidden');
+              document.getElementById('inputNomeEvento').value = res.evento;
+            }
+          }).catch(tratarFalhaServidor);
+      }
+
+      function atualizarNomeDoEvento() {
+        const novoNome = document.getElementById('inputNomeEvento').value.trim();
+        if(!novoNome) return;
+        
+        document.getElementById('btnMudarEvento').disabled = true;
+        mostrarAviso('Atualizando evento...', 'loading');
+        
+        executarChamadaAPI({ acao: 'salvarEvento', novoNome: novoNome, senha: senhaAutenticada })
+          .then(res => {
+            document.getElementById('btnMudarEvento').disabled = false;
+            if(res.sucesso) {
+              document.getElementById('inputNomeEvento').value = res.novoEvento;
+              mostrarAviso('🚀 Evento atualizado para "' + res.novoEvento + '"!', 'sucesso');
+            } else {
+              mostrarAviso('❌ ' + res.mensagem, 'erro');
+            }
+            setTimeout(() => { document.getElementById('status').classList.add('hidden'); }, 3000);
+          }).catch(tratarFalhaServidor);
+      }
+
+      function iniciarScannerFiscal() {
+        document.getElementById('reader').classList.remove('hidden');
+        document.getElementById('btnScanner').classList.add('hidden');
+        document.getElementById('status').classList.add('hidden');
+        
+        html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
+        
+        html5QrcodeScanner.render(textoDecodificado => {
+          html5QrcodeScanner.pause();
+          
+          let idExtraido = textoDecodificado;
+          if (textoDecodificado.includes("-")) {
+            idExtraido = textoDecodificado.split("-")[1]; 
+          }
+          document.getElementById('idManualFiscal').value = idExtraido;
+          
+          mostrarAviso('QR Code lido! Fechando câmera...', 'loading');
+
+          html5QrcodeScanner.clear().then(() => {
+            document.getElementById('reader').classList.add('hidden');
+            document.getElementById('btnScanner').classList.remove('hidden');
+            validarPresencaFiscal(); 
+          }).catch(error => {
+            validarPresencaFiscal(); 
+          });
+          
+        }, erro => {});
+      }
+
+      function validarPresencaFiscal() {
+        const id = document.getElementById('idManualFiscal').value.trim();
+        if(!id) return mostrarAviso('Nenhum ID detectado.', 'erro');
+        
+        document.getElementById('btnCarimbarFiscal').disabled = true;
+        mostrarAviso('⏱️ Carimbando presença no banco de dados...', 'loading');
+        document.getElementById('idManualFiscal').value = ""; 
+        
+        executarChamadaAPI({ acao: 'carimbarPresenca', id: id, senha: senhaAutenticada })
+          .then(res => {
+            document.getElementById('btnCarimbarFiscal').disabled = false;
+            if(res.sucesso) {
+              mostrarAviso('✅ ' + res.mensagem, 'sucesso');
+            } else {
+              mostrarAviso('❌ ' + res.mensagem, 'erro');
+            }
+            setTimeout(() => { document.getElementById('status').classList.add('hidden'); }, 4000);
+          }).catch(tratarFalhaServidor);
+      }
+    </script>
+  </body>
+</html>
