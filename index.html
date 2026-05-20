@@ -97,7 +97,7 @@
     <a class="admin-link" onclick="ativarModoFiscal()">🔒 Terminal da Diretoria</a>
 
     <script>
-      // CONFIGURAÇÃO DO ENDPOINT ATUALIZADO DO SERVIDOR COFRE
+      // LINK DE CONEXÃO DIRETA COM O SERVIDOR CENTRAL
       const URL_API_SERVIDORES = 'https://script.google.com/macros/s/AKfycbyXx6Q1n6tBJGuE6zVYRAQz2vDUsr_CkkNZzsKgAnmfPfPf58_kHHzdf72KKA4i3xv7/exec';
       
       let cacheId = "";
@@ -110,25 +110,45 @@
         s.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
 
-      function tratarFalhaServidor(erro) {
+      function destrancarBotoes() {
         document.querySelectorAll('button').forEach(btn => btn.disabled = false);
-        mostrarAviso("⚠️ Erro de execução. Tente novamente.", "erro");
+      }
+
+      function tratarFalhaServidor(erro) {
+        destrancarBotoes();
+        if (erro.name === 'AbortError') {
+          mostrarAviso("⚠️ O servidor demorou a responder. Certifique-se de que não há bloqueadores de anúncios ativos ou múltiplas contas Google conectadas no seu navegador.", "erro");
+        } else {
+          mostrarAviso("⚠️ Falha de comunicação com a planilha central. Tente novamente.", "erro");
+        }
         console.error(erro);
       }
 
-      async function ejecutarChamadaAPI(dadosEnvio) {
+      // 🚨 NOVO MOTOR ULTRA-ROBUSTO ANTI-CONGELAMENTO
+      async function executarChamadaAPI(dadosEnvio) {
         dadosEnvio.apiKey = "LAIFT_API_2026"; 
         
-        const respostaExecucao = await fetch(URL_API_SERVIDORES, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'text/plain;charset=utf-8'
-          },
-          redirect: 'follow', 
-          body: JSON.stringify(dadosEnvio)
-        });
+        // Cria um cronômetro de estouro de tempo (8 segundos)
+        const controladorTempo = new AbortController();
+        const ID_Cronometro = setTimeout(() => controladorTempo.abort(), 8000);
         
-        return await respostaExecucao.json();
+        try {
+          const respostaExecucao = await fetch(URL_API_SERVIDORES, {
+            method: 'POST',
+            signal: controladorTempo.signal, // Vincula o disjuntor à requisição
+            body: JSON.stringify(dadosEnvio)
+          });
+          
+          clearTimeout(ID_Cronometro); // Desliga o cronômetro se o Google respondeu a tempo
+          
+          // Captura a resposta primeiro como texto puro para evitar travamento de stream do leitor JSON
+          const textoPuro = await respostaExecucao.text();
+          return JSON.parse(textoPuro);
+          
+        } catch(e) {
+          clearTimeout(ID_Cronometro);
+          throw e; // Lança o erro para ser pego no .catch() e liberar a tela
+        }
       }
 
       // --- ÁREA DE ALUNOS ---
@@ -191,6 +211,7 @@
             document.getElementById('status').classList.add('hidden');
             if(res.sucesso === false) {
               alert("Acesso Negado: Senha Incorreta.");
+              destrancarBotoes();
             } else {
               senhaAutenticada = senha;
               document.getElementById('areaPublica').classList.add('hidden');
@@ -214,7 +235,7 @@
             document.getElementById('btnMudarEvento').disabled = false;
             if(res.sucesso) {
               document.getElementById('inputNomeEvento').value = res.novoEvento;
-              mostrarAviso('🚀 Evento updated para "' + res.novoEvento + '"!', 'sucesso');
+              mostrarAviso('🚀 Evento atualizado para "' + res.novoEvento + '"!', 'sucesso');
             } else {
               mostrarAviso('❌ ' + res.mensagem, 'erro');
             }
