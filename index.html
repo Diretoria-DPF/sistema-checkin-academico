@@ -130,7 +130,7 @@
         
         // Cria um cronômetro de estouro de tempo (8 segundos)
         const controladorTempo = new AbortController();
-        const ID_Cronometro = setTimeout(() => controladorTempo.abort(), 8000);
+        const ID_Cronometro = setTimeout(() => controladorTempo.abort(), 1600);
         
         try {
           const respostaExecucao = await fetch(URL_API_SERVIDORES, {
