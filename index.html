@@ -10,7 +10,8 @@
       .card { background: white; width: 100%; max-width: 420px; padding: 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); box-sizing: border-box; }
       .logo-area { font-size: 26px; font-weight: bold; color: #1a365d; margin-bottom: 5px; text-align: center;} 
       .sub { color: #718096; font-size: 14px; margin-bottom: 25px; text-align: center;} 
-      input, select, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 8px; border: 1px solid #cbd5e0; box-sizing: border-box; font-size: 16px; }
+      input, select, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 8px;
+                             border: 1px solid #cbd5e0; box-sizing: border-box; font-size: 16px; }
       input:focus { border-color: #3182ce; outline: none; }
       button { background-color: #3182ce; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
       button:hover { background-color: #2b6cb0; }
@@ -128,9 +129,9 @@
       async function executarChamadaAPI(dadosEnvio) {
         dadosEnvio.apiKey = "LAIFT_API_2026"; 
         
-        // Cria um cronômetro de estouro de tempo (8 segundos)
+        // Cria um cronômetro de estouro de tempo (25 segundos)
         const controladorTempo = new AbortController();
-        const ID_Cronometro = setTimeout(() => controladorTempo.abort(), 1600);
+        const ID_Cronometro = setTimeout(() => controladorTempo.abort(), 25000);
         
         try {
           const respostaExecucao = await fetch(URL_API_SERVIDORES, {
