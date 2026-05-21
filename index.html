@@ -98,8 +98,7 @@
     <a class="admin-link" onclick="ativarModoFiscal()">🔒 Terminal da Diretoria</a>
 
     <script>
-      // LINK DE CONEXÃO DIRETA COM O SERVIDOR CENTRAL
-      const URL_API_SERVIDORES = 'https://script.google.com/macros/s/AKfycbzw7nINUaOeZKwiSnaPg81w-B7ax1a-Uc412T3ZpIpOcIbVuLrAaBKJIpRUuPEGY6Zo/exec';
+      const URL_API_SERVIDORES = 'https://script.google.com/macros/s/AKfycbyOuPc2JoZX857vg-oiZWj1H_UD9PRSQfPJSSq8UmJPHCqUWblWzh-pvuhOFD0utqhS/exec';
       
       let cacheId = "";
       let senhaAutenticada = "";
@@ -125,7 +124,6 @@
         console.error(erro);
       }
 
-      // 🚨 NOVO MOTOR ULTRA-ROBUSTO ANTI-CONGELAMENTO
       async function executarChamadaAPI(dadosEnvio) {
         dadosEnvio.apiKey = "LAIFT_API_2026"; 
         
