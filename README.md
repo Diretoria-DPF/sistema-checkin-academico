@@ -31,3 +31,5 @@ O frontend está hospedado e vivo no GitHub Pages.
 ---
 **Autoria:** Daniel Pires Francisco  
 **Contexto de Aplicação:** Solução desenvolvida para a rotina de gestão universitária (LAIFT).
+
+🤖 Tecnologias O desenvolvimento deste projeto contou com o apoio de Inteligência Artificial para a estruturação lógica, refinamento da arquitetura do motor estequiométrico e otimização da interface de utilizador. A IA foi utilizada como uma ferramenta de co-criação, permitindo que a lógica complexa de reações químicas e a física de fluidos fossem implementadas com maior robustez e precisão algorítmica.
