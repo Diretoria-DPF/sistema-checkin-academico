@@ -1514,30 +1514,44 @@
         .replace(/'/g, '&#39;');
     }
 
-    async function logoutFiscal() {
-      await closeScanner();
-
-      state.fiscalSession = '';
-      state.scanInProgress = false;
-
-      byId('fiscalArea').classList.add('hidden');
-      byId('publicArea').classList.remove('hidden');
-
-      byId('subtitle').textContent =
-        'Portal de Credencial Acadêmica';
-
-      byId('eventName').value = '';
-      byId('manualIdentifier').value = '';
-      byId('memberSearch').value = '';
-
-      byId('memberList').innerHTML = `
-        <div class="member-list-empty">
-          Digite ao menos dois caracteres para pesquisar participantes.
-        </div>
-      `;
-
-      restartPublicFlow();
+  async function logoutFiscal() {
+  try {
+    if (state.fiscalSession) {
+      await apiCall({
+        acao: 'logoutFiscal',
+        sessao: state.fiscalSession
+      });
     }
+  } catch (error) {
+    console.warn(
+      'Não foi possível registrar o encerramento da sessão:',
+      error
+    );
+  }
+
+  await closeScanner();
+
+  state.fiscalSession = '';
+  state.scanInProgress = false;
+
+  byId('fiscalArea').classList.add('hidden');
+  byId('publicArea').classList.remove('hidden');
+
+  byId('subtitle').textContent =
+    'Portal de Credencial Acadêmica';
+
+  byId('eventName').value = '';
+  byId('manualIdentifier').value = '';
+  byId('memberSearch').value = '';
+
+  byId('memberList').innerHTML = `
+    <div class="member-list-empty">
+      Digite ao menos dois caracteres para pesquisar participantes.
+    </div>
+  `;
+
+  restartPublicFlow();
+}
 
     let logoPressTimer = null;
 
