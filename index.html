@@ -1,295 +1,1620 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>LAIFT - Portaria Digital</title>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <style>
-      body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 90vh; margin: 0; }
-      .card { background: white; width: 100%; max-width: 420px; padding: 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); box-sizing: border-box; }
-      .logo-area { font-size: 26px; font-weight: bold; color: #1a365d; margin-bottom: 5px; text-align: center;} 
-      .sub { color: #718096; font-size: 14px; margin-bottom: 25px; text-align: center;} 
-      input, select, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 8px;
-                             border: 1px solid #cbd5e0; box-sizing: border-box; font-size: 16px; }
-      input:focus { border-color: #3182ce; outline: none; }
-      button { background-color: #3182ce; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
-      button:hover { background-color: #2b6cb0; }
-      button:disabled { background-color: #cbd5e0; cursor: not-allowed; }
-      .btn-qr { background-color: #2d3748; padding: 18px; border-radius: 12px; } .btn-qr:hover { background-color: #1a202c; }
-      .hidden { display: none !important; }
-      #reader { width: 100%; border-radius: 8px; overflow: hidden; margin-bottom: 15px; border: 2px solid #2d3748; }
-      #status { margin-top: 15px; font-weight: bold; padding: 12px; border-radius: 6px; text-align: center; font-size: 15px;}
-      .sucesso { background-color: #c6f6d5; color: #22543d; border: 1px solid #9ae6b4; }
-      .erro { background-color: #fed7d7; color: #742a2a; border: 1px solid #feb2b2; }
-      .loading { background-color: #e2e8f0; color: #4a5568; font-style: italic; }
-      .admin-link { margin-top: 20px; color: #a0aec0; font-size: 12px; text-decoration: none; display: flex; align-items: center; gap: 5px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
-      .admin-link:hover { color: #4a5568; }
-      .badge-admin { background: #e53e3e; color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; margin-bottom: 15px; display: inline-block; font-weight: bold;}
-      .bloco-fiscal { background: #f7fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px; text-align: center; }
-      .bloco-fiscal h3 { font-size: 12px; color: #718096; text-transform: uppercase; margin-top: 0; margin-bottom: 10px; letter-spacing: 0.5px; }
-      .divisor { text-align: center; color: #a0aec0; font-size: 12px; font-weight: bold; margin: 15px 0; text-transform: uppercase; }
-    </style>
-  </head>
-  <body>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <div class="card">
-      <div class="logo-area">LAIFT</div> 
-      <div id="subtitulo" class="sub">Portal de Autoatendimento</div>
+  <title>LAIFT — Autenticação Digital</title>
 
-      <div id="status" class="hidden"></div>
+  <script
+    src="https://unpkg.com/html5-qrcode"
+    type="text/javascript"
+  ></script>
 
-      <div id="areaPublica">
-        <div id="formIdentidade">
-          <p style="font-size: 14px; color: #4a5568; text-align: center;">Digite sua matrícula para acessar sua credencial.</p>
-          <input type="text" id="idAluno" placeholder="Matrícula ou CPF" required>
-          <button type="button" id="btnAcessarPortal" onclick="acessarPortalAluno()">Acessar Minha Credencial</button>
-        </div>
+  <style>
+    :root {
+      --primary: #1a365d;
+      --primary-light: #3182ce;
+      --primary-hover: #2b6cb0;
+      --secondary: #4a5568;
+      --background: #f0f2f5;
+      --surface: #ffffff;
+      --border: #cbd5e0;
+      --muted: #718096;
+      --danger: #9b2c2c;
+      --success: #22543d;
+      --success-bg: #c6f6d5;
+      --error-bg: #fed7d7;
+      --loading-bg: #edf2f7;
+    }
 
-        <div id="formCadastro" class="hidden">
-          <p style="color: #dd6b20; font-weight: bold; font-size: 14px; text-align: center;">Conclua seu cadastro abaixo:</p>
-          <select id="tipoAluno" required>
-            <option value="" disabled selected>Você é...</option>
-            <option value="Membro">Membro da Liga</option>
-            <option value="Visitante">Visitante Externo</option>
-          </select>
-          <input type="text" id="nomeAluno" placeholder="Nome Completo" required>
-          <input type="email" id="emailAluno" placeholder="E-mail Institucional ou Pessoal" required>
-          <button type="button" id="btnSalvarAluno" onclick="salvarNovoAluno()">Gerar Meu QR Code</button>
-        </div>
+    * {
+      box-sizing: border-box;
+    }
 
-        <div id="telaQR" class="hidden">
-          <p style="font-size: 14px; color: #4a5568; text-align: center;">Tire um print ou verifique seu e-mail!</p>
-          <div style="text-align: center; margin: 15px 0;">
-            <img id="imgQR" src="" style="border: 4px solid #e2e8f0; border-radius: 8px; width: 200px; height: 200px; display: inline-block;">
-          </div>
-          <button type="button" style="background: #718096;" onclick="window.location.reload()">Voltar ao Início</button>
-        </div>
-      </div>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      background:
+        radial-gradient(
+          800px 500px at 0 0,
+          rgba(49, 130, 206, 0.12),
+          transparent 60%
+        ),
+        var(--background);
+      color: #1a202c;
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
 
-      <div id="areaFiscal" class="hidden">
-        <div style="text-align: center;"><span class="badge-admin">Terminal de Validação Ativo</span></div>
-        
-        <div class="bloco-fiscal" style="text-align: left;">
-          <h3>Configuração do Evento</h3>
-          <div style="display: flex; gap: 5px;">
-            <input type="text" id="inputNomeEvento" placeholder="Carregando..." style="margin: 0; padding: 10px; font-size: 13px;">
-            <button type="button" id="btnMudarEvento" style="margin: 0; width: auto; padding: 0 15px; font-size: 13px;" onclick="atualizarNomeDoEvento()">Salvar</button>
-          </div>
-        </div>
+    .card {
+      width: 100%;
+      max-width: 460px;
+      padding: 28px;
+      border-radius: 15px;
+      background: var(--surface);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    }
 
-        <div class="bloco-fiscal">
-          <h3>Check-in Automático</h3>
-          <div id="reader" class="hidden"></div>
-          <button type="button" class="btn-qr" id="btnScanner" onclick="iniciarScannerFiscal()">📷 Escanear QR Code</button>
-          <p style="font-size: 11px; color: #718096; margin-top: 10px;">Confirmação automática após a leitura.</p>
-        </div>
-        
-        <div class="divisor">OU</div>
-        
-        <div class="bloco-fiscal">
-          <h3>Check-in Manual</h3>
-          <input type="text" id="idManualFiscal" placeholder="Digitar Matrícula" style="text-align: center;">
-          <button type="button" id="btnCarimbarFiscal" onclick="validarPresencaFiscal()" style="background-color: #4a5568;">Carimbar Manual</button>
-        </div>
-      </div>
+    .logo-area {
+      margin-bottom: 5px;
+      color: var(--primary);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-align: center;
+      cursor: default;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .sub {
+      margin-bottom: 22px;
+      color: var(--muted);
+      font-size: 14px;
+      text-align: center;
+    }
+
+    input,
+    select,
+    button {
+      width: 100%;
+      margin: 9px 0;
+      padding: 13px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font: inherit;
+      font-size: 16px;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--primary-light);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.16);
+    }
+
+    button {
+      border: 0;
+      background: var(--primary-light);
+      color: #ffffff;
+      font-weight: 700;
+      cursor: pointer;
+      transition:
+        background-color 0.2s,
+        transform 0.15s;
+    }
+
+    button:hover {
+      background: var(--primary-hover);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button:disabled {
+      background: #cbd5e0;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .secondary-button {
+      background: #718096;
+    }
+
+    .secondary-button:hover {
+      background: var(--secondary);
+    }
+
+    .scanner-button {
+      padding: 17px;
+      border-radius: 10px;
+      background: #2d3748;
+    }
+
+    .scanner-button:hover {
+      background: #1a202c;
+    }
+
+    .danger-button {
+      background: #c53030;
+    }
+
+    .danger-button:hover {
+      background: #9b2c2c;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    #reader {
+      width: 100%;
+      margin: 8px 0 14px;
+      overflow: hidden;
+      border: 2px solid #2d3748;
+      border-radius: 9px;
+    }
+
+    #status {
+      margin: 0 0 16px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    .success {
+      border: 1px solid #9ae6b4;
+      background: var(--success-bg);
+      color: var(--success);
+    }
+
+    .error {
+      border: 1px solid #feb2b2;
+      background: var(--error-bg);
+      color: var(--danger);
+    }
+
+    .loading {
+      border: 1px solid #cbd5e0;
+      background: var(--loading-bg);
+      color: #4a5568;
+    }
+
+    .badge-admin {
+      display: inline-block;
+      margin-bottom: 14px;
+      padding: 5px 10px;
+      border-radius: 5px;
+      background: #c53030;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .section-box {
+      margin-bottom: 18px;
+      padding: 15px;
+      border: 1px solid #e2e8f0;
+      border-radius: 9px;
+      background: #f7fafc;
+      text-align: center;
+    }
+
+    .section-box h3 {
+      margin: 0 0 10px;
+      color: #718096;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .divider {
+      margin: 16px 0;
+      color: #a0aec0;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .info-text {
+      margin: 0 0 12px;
+      color: #4a5568;
+      font-size: 14px;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    .policy-box {
+      max-height: 175px;
+      margin: 12px 0;
+      padding: 12px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #f7fafc;
+      color: #4a5568;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .policy-box h4 {
+      margin: 0 0 8px;
+      color: var(--primary);
+      font-size: 13px;
+    }
+
+    .policy-box p {
+      margin: 0 0 9px;
+    }
+
+    .consent {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      margin: 12px 0;
+      color: #4a5568;
+      font-size: 12px;
+      line-height: 1.4;
+      text-align: left;
+    }
+
+    .consent input {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .otp-input {
+      margin: 14px 0;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 9px;
+      text-align: center;
+    }
+
+    .qr-container {
+      display: flex;
+      justify-content: center;
+      margin: 18px 0;
+    }
+
+    .qr-container img {
+      display: block;
+      width: 240px;
+      height: 240px;
+      max-width: 100%;
+      border: 5px solid #ffffff;
+      border-radius: 10px;
+      background: #ffffff;
+      box-shadow: 0 0 0 1px #e2e8f0;
+      image-rendering: pixelated;
+    }
+
+    .credential-note {
+      margin: 12px 0;
+      color: #718096;
+      font-size: 12px;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    .fiscal-event-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .fiscal-event-row input {
+      min-width: 0;
+      margin: 0;
+      padding: 10px;
+      font-size: 13px;
+    }
+
+    .fiscal-event-row button {
+      width: auto;
+      margin: 0;
+      padding: 0 14px;
+      font-size: 13px;
+    }
+
+    .small-note {
+      margin: 8px 0 0;
+      color: #718096;
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .presence-search {
+      margin-bottom: 8px;
+    }
+
+    .member-list {
+      max-height: 290px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #ffffff;
+      text-align: left;
+    }
+
+    .member-list-empty {
+      padding: 14px;
+      color: #718096;
+      font-size: 12px;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    .member-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 11px;
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    .member-item:last-child {
+      border-bottom: 0;
+    }
+
+    .member-info {
+      min-width: 0;
+    }
+
+    .member-name {
+      overflow: hidden;
+      color: #2d3748;
+      font-size: 13px;
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .member-meta {
+      margin-top: 3px;
+      color: #718096;
+      font-size: 11px;
+    }
+
+    .member-item button {
+      width: auto;
+      flex: 0 0 auto;
+      margin: 0;
+      padding: 8px 10px;
+      border-radius: 7px;
+      font-size: 11px;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="card">
+    <div
+      id="laiftLogo"
+      class="logo-area"
+      title="LAIFT"
+      role="button"
+      tabindex="0"
+      aria-label="LAIFT"
+    >
+      LAIFT
     </div>
 
-    <a class="admin-link" onclick="ativarModoFiscal()">🔒 Terminal da Diretoria</a>
+    <div id="subtitle" class="sub">
+      Portal de Credencial Acadêmica
+    </div>
 
-    <script>
-      const URL_API_SERVIDORES = 'https://script.google.com/macros/s/AKfycbxjYJvNaEi7fMhlSqRDzFqRzSpiooRmg-8KUhv_vL45yUzyTYoGEzDml-i4E8kru9xh/exec';
-      
-      let cacheId = "";
-      let senhaAutenticada = "";
-      let html5QrcodeScanner;
+    <div id="status" class="hidden"></div>
 
-      function mostrarAviso(texto, classe) {
-        const s = document.getElementById('status');
-        s.innerHTML = texto; s.className = classe; s.classList.remove('hidden');
-        s.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    <section id="publicArea">
+      <div id="identityForm">
+        <p class="info-text">
+          Informe sua matrícula e seu e-mail para acessar ou criar sua credencial.
+        </p>
+
+        <input
+          id="studentId"
+          type="text"
+          placeholder="Matrícula ou CPF"
+          autocomplete="username"
+          maxlength="32"
+        >
+
+        <input
+          id="studentEmail"
+          type="email"
+          placeholder="E-mail institucional ou pessoal"
+          autocomplete="email"
+          maxlength="120"
+        >
+
+        <button
+          id="requestCodeButton"
+          type="button"
+          onclick="requestAccessCode()"
+        >
+          Continuar
+        </button>
+      </div>
+
+      <div id="registrationForm" class="hidden">
+        <p class="info-text">
+          Complete os dados abaixo para concluir seu cadastro.
+        </p>
+
+        <select id="participantType">
+          <option value="" selected disabled>Você é...</option>
+          <option value="Membro">Membro da Liga</option>
+          <option value="Visitante">Visitante Externo</option>
+        </select>
+
+        <input
+          id="participantName"
+          type="text"
+          placeholder="Nome completo"
+          autocomplete="name"
+          maxlength="120"
+        >
+
+        <div class="policy-box">
+          <h4>Política de Privacidade e Uso de Dados — LAIFT</h4>
+
+          <p>
+            As informações fornecidas serão utilizadas exclusivamente para
+            cadastro, identificação de participantes, emissão de credencial,
+            controle de presença e organização de atividades da Liga Acadêmica
+            Interdisciplinar de Farmacologia e Toxicologia — LAIFT.
+          </p>
+
+          <p>
+            O QR Code utiliza exclusivamente um código aleatório para validação
+            de presença e não contém CPF, matrícula, nome ou e-mail.
+          </p>
+
+          <p>
+            A pessoa participante poderá solicitar esclarecimentos, correção
+            ou atualização de seus dados pelos canais oficiais da LAIFT.
+          </p>
+        </div>
+
+        <label class="consent">
+          <input id="privacyConsent" type="checkbox">
+
+          <span>
+            Li e concordo com a Política de Privacidade e Uso de Dados da LAIFT,
+            autorizando o tratamento das informações estritamente necessário para
+            cadastro, credencial e atividades acadêmicas.
+          </span>
+        </label>
+
+        <button
+          id="sendRegistrationCodeButton"
+          type="button"
+          onclick="sendRegistrationCode()"
+        >
+          Enviar Código de Confirmação
+        </button>
+
+        <button
+          class="secondary-button"
+          type="button"
+          onclick="returnToIdentity()"
+        >
+          Voltar
+        </button>
+      </div>
+
+      <div id="otpForm" class="hidden">
+        <p class="info-text">
+          Enviamos um código de seis dígitos para o e-mail informado.
+          Digite o código abaixo para confirmar sua identidade.
+        </p>
+
+        <input
+          id="otpCode"
+          class="otp-input"
+          type="text"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          placeholder="000000"
+          maxlength="6"
+        >
+
+        <button
+          id="validateCodeButton"
+          type="button"
+          onclick="validateAccessCode()"
+        >
+          Confirmar Código
+        </button>
+
+        <button
+          class="secondary-button"
+          type="button"
+          onclick="restartPublicFlow()"
+        >
+          Recomeçar
+        </button>
+
+        <p class="small-note">
+          O código expira em 10 minutos e pode ser utilizado uma única vez.
+        </p>
+      </div>
+
+      <div id="credentialScreen" class="hidden">
+        <p class="info-text">
+          Sua credencial LAIFT está pronta! Seja bem-vindo!
+        </p>
+
+        <div class="qr-container">
+          <img
+            id="credentialQrImage"
+            src=""
+            alt="QR Code da credencial LAIFT"
+          >
+        </div>
+
+        <p class="credential-note">
+          Este QR Code é único e será utilizado para validar sua presença nas
+          atividades ou eventos. Também poderá solicitar seu crachá diretamente
+          com a diretoria.
+        </p>
+
+        <button
+          id="resendCredentialButton"
+          type="button"
+          onclick="resendCredentialEmail()"
+        >
+          Enviar QR Code para meu e-mail
+        </button>
+
+        <button
+          class="secondary-button"
+          type="button"
+          onclick="restartPublicFlow()"
+        >
+          Voltar ao Início
+        </button>
+      </div>
+    </section>
+
+    <section id="fiscalArea" class="hidden">
+      <div style="text-align:center;">
+        <span class="badge-admin">Terminal de Validação Ativo</span>
+      </div>
+
+      <div class="section-box" style="text-align:left;">
+        <h3>Evento Ativo</h3>
+
+        <div class="fiscal-event-row">
+          <input
+            id="eventName"
+            type="text"
+            placeholder="Carregando evento..."
+            maxlength="80"
+          >
+
+          <button
+            id="saveEventButton"
+            type="button"
+            onclick="saveActiveEvent()"
+          >
+            Salvar
+          </button>
+        </div>
+      </div>
+
+      <div class="section-box">
+        <h3>Check-in por QR Code</h3>
+
+        <div id="reader" class="hidden"></div>
+
+        <button
+          id="scannerButton"
+          class="scanner-button"
+          type="button"
+          onclick="startFiscalScanner()"
+        >
+          📷 Escanear QR Code
+        </button>
+
+        <p class="small-note">
+          O QR é validado no servidor e a presença é registrada no evento ativo.
+        </p>
+      </div>
+
+      <div class="divider">Ou</div>
+
+      <div class="section-box">
+        <h3>Check-in Manual</h3>
+
+        <input
+          id="manualIdentifier"
+          type="text"
+          placeholder="Digite matrícula ou CPF"
+          autocomplete="off"
+          maxlength="32"
+        >
+
+        <button
+          id="manualCheckinButton"
+          class="secondary-button"
+          type="button"
+          onclick="submitManualCheckin()"
+        >
+          Marcar Presença Manualmente
+        </button>
+      </div>
+
+      <div class="divider">Ou</div>
+
+      <div class="section-box">
+        <h3>Lista de Presença</h3>
+
+        <input
+          id="memberSearch"
+          class="presence-search"
+          type="text"
+          placeholder="Pesquisar por nome, matrícula ou CPF"
+          autocomplete="off"
+          oninput="scheduleMemberSearch()"
+        >
+
+        <div id="memberList" class="member-list">
+          <div class="member-list-empty">
+            Digite ao menos dois caracteres para pesquisar participantes.
+          </div>
+        </div>
+
+        <p class="small-note">
+          Use esta opção para reuniões online ou validação manual por lista.
+        </p>
+      </div>
+
+      <button
+        class="danger-button"
+        type="button"
+        onclick="logoutFiscal()"
+      >
+        Encerrar Terminal
+      </button>
+    </section>
+  </main>
+
+  <script>
+    const API_URL =
+      'https://script.google.com/macros/s/AKfycbwxyKTIsYURJfh9-L04ijLzq-0UcIcQiSFj8yKgw_fXQEE8NjpM94l0zOtcXHhdH4CsTQ/exec';
+
+    const QR_PREFIX = 'LAIFT:v1:';
+
+    const state = {
+      identifier: '',
+      email: '',
+      publicSession: '',
+      fiscalSession: '',
+      scanner: null,
+      scanInProgress: false,
+      memberSearchTimer: null
+    };
+
+    function byId(id) {
+      return document.getElementById(id);
+    }
+
+    function showStatus(message, type) {
+      const status = byId('status');
+
+      status.textContent = message;
+      status.className = type;
+      status.classList.remove('hidden');
+
+      status.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }
+
+    function hideStatus() {
+      byId('status').classList.add('hidden');
+    }
+
+    function showPublicStep(stepId) {
+      const steps = [
+        'identityForm',
+        'registrationForm',
+        'otpForm',
+        'credentialScreen'
+      ];
+
+      steps.forEach((id) => {
+        byId(id).classList.add('hidden');
+      });
+
+      byId(stepId).classList.remove('hidden');
+    }
+
+    function setLoading(buttonId, loading) {
+      byId(buttonId).disabled = loading;
+    }
+
+    async function apiCall(payload) {
+      const controller = new AbortController();
+
+      const timeout = setTimeout(() => {
+        controller.abort();
+      }, 25000);
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          signal: controller.signal,
+          body: JSON.stringify(payload)
+        });
+
+        const rawResponse = await response.text();
+
+        return JSON.parse(rawResponse);
+
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    function handleError(error) {
+      console.error(error);
+
+      if (error && error.name === 'AbortError') {
+        showStatus(
+          'A operação demorou mais que o esperado. Verifique sua conexão e tente novamente.',
+          'error'
+        );
+
+        return;
       }
 
-      function destrancarBotoes() {
-        document.querySelectorAll('button').forEach(btn => btn.disabled = false);
+      showStatus(
+        'Não foi possível comunicar com o sistema. Tente novamente.',
+        'error'
+      );
+    }
+
+    function readPublicIdentity() {
+      const identifier = byId('studentId').value.trim();
+      const email = byId('studentEmail').value.trim().toLowerCase();
+
+      if (!identifier || !email) {
+        showStatus(
+          'Informe sua matrícula/CPF e seu e-mail.',
+          'error'
+        );
+
+        return false;
       }
 
-      function tratarFalhaServidor(erro) {
-        destrancarBotoes();
-        if (erro.name === 'AbortError') {
-          mostrarAviso("⚠️ O servidor demorou a responder. Certifique-se de que não há bloqueadores de anúncios ativos ou múltiplas contas Google conectadas no seu navegador.", "erro");
-        } else {
-          mostrarAviso("⚠️ Falha de comunicação com a planilha central. Tente novamente.", "erro");
+      state.identifier = identifier;
+      state.email = email;
+
+      return true;
+    }
+
+    async function requestAccessCode() {
+      hideStatus();
+
+      if (!readPublicIdentity()) {
+        return;
+      }
+
+      setLoading('requestCodeButton', true);
+
+      showStatus(
+        'Verificando informações...',
+        'loading'
+      );
+
+      try {
+        const response = await apiCall({
+          acao: 'solicitarCodigoAcesso',
+          identificador: state.identifier,
+          email: state.email,
+          tipo: '',
+          nome: '',
+          aceitouPolitica: false
+        });
+
+        if (response.novoCadastro) {
+          hideStatus();
+          showPublicStep('registrationForm');
+
+          return;
         }
-        console.error(erro);
-      }
 
-      async function executarChamadaAPI(dadosEnvio) {
-        dadosEnvio.apiKey = "LAIFT_API_2026"; 
-        
-        // Cria um cronômetro de estouro de tempo (25 segundos)
-        const controladorTempo = new AbortController();
-        const ID_Cronometro = setTimeout(() => controladorTempo.abort(), 25000);
-        
-        try {
-          const respostaExecucao = await fetch(URL_API_SERVIDORES, {
-            method: 'POST',
-            signal: controladorTempo.signal, // Vincula o disjuntor à requisição
-            body: JSON.stringify(dadosEnvio)
-          });
-          
-          clearTimeout(ID_Cronometro); // Desliga o cronômetro se o Google respondeu a tempo
-          
-          // Captura a resposta primeiro como texto puro para evitar travamento de stream do leitor JSON
-          const textoPuro = await respostaExecucao.text();
-          return JSON.parse(textoPuro);
-          
-        } catch(e) {
-          clearTimeout(ID_Cronometro);
-          throw e; // Lança o erro para ser pego no .catch() e liberar a tela
+        if (!response.sucesso) {
+          showStatus(
+            response.mensagem || 'Não foi possível continuar.',
+            'error'
+          );
+
+          return;
         }
+
+        hideStatus();
+        byId('otpCode').value = '';
+        showPublicStep('otpForm');
+
+      } catch (error) {
+        handleError(error);
+
+      } finally {
+        setLoading('requestCodeButton', false);
+      }
+    }
+
+    async function sendRegistrationCode() {
+      hideStatus();
+
+      const type = byId('participantType').value;
+      const name = byId('participantName').value.trim();
+      const acceptedPolicy = byId('privacyConsent').checked;
+
+      if (!type || !name) {
+        showStatus(
+          'Informe seu tipo de participação e nome completo.',
+          'error'
+        );
+
+        return;
       }
 
-      // --- ÁREA DE ALUNOS ---
-      function acessarPortalAluno() {
-        cacheId = document.getElementById('idAluno').value.trim();
-        if(!cacheId) return mostrarAviso('Digite sua matrícula.', 'erro');
-        
-        document.getElementById('btnAcessarPortal').disabled = true;
-        mostrarAviso('Buscando base de dados...', 'loading');
-        
-        executarChamadaAPI({ acao: 'verificarAluno', id: cacheId })
-          .then(res => {
-            document.getElementById('btnAcessarPortal').disabled = false;
-            document.getElementById('status').classList.add('hidden');
-            if(res.registrado) {
-              document.getElementById('formIdentidade').classList.add('hidden');
-              document.getElementById('imgQR').src = res.qrcodeUrl;
-              document.getElementById('telaQR').classList.remove('hidden');
-            } else {
-              document.getElementById('formIdentidade').classList.add('hidden');
-              document.getElementById('formCadastro').classList.remove('hidden');
-            }
-          }).catch(tratarFalhaServidor);
+      if (!acceptedPolicy) {
+        showStatus(
+          'Você precisa aceitar a Política de Privacidade e Uso de Dados.',
+          'error'
+        );
+
+        return;
       }
 
-      function salvarNovoAluno() {
-        const dados = {
-          identificador: cacheId,
-          tipo: document.getElementById('tipoAluno').value,
-          nome: document.getElementById('nomeAluno').value.trim(),
-          email: document.getElementById('emailAluno').value.trim()
-        };
-        if(!dados.nome || !dados.email || !dados.tipo) return mostrarAviso('Preencha todos os campos.', 'erro');
-        
-        document.getElementById('btnSalvarAluno').disabled = true;
-        mostrarAviso('Construindo credencial digital...', 'loading');
-        
-        executarChamadaAPI({ acao: 'cadastrarAluno', dados: dados })
-          .then(res => {
-            document.getElementById('btnSalvarAluno').disabled = false;
-            if(res.sucesso) {
-              document.getElementById('status').classList.add('hidden');
-              document.getElementById('formCadastro').classList.add('hidden');
-              document.getElementById('imgQR').src = res.qrcodeUrl;
-              document.getElementById('telaQR').classList.remove('hidden');
-            } else {
-              mostrarAviso('❌ Erro no cadastro: ' + res.mensagem, 'erro');
-            }
-          }).catch(tratarFalhaServidor);
+      setLoading('sendRegistrationCodeButton', true);
+
+      showStatus(
+        'Enviando código de confirmação...',
+        'loading'
+      );
+
+      try {
+        const response = await apiCall({
+          acao: 'solicitarCodigoAcesso',
+          identificador: state.identifier,
+          email: state.email,
+          tipo: type,
+          nome: name,
+          aceitouPolitica: acceptedPolicy
+        });
+
+        if (!response.sucesso) {
+          showStatus(
+            response.mensagem || 'Não foi possível enviar o código.',
+            'error'
+          );
+
+          return;
+        }
+
+        hideStatus();
+        byId('otpCode').value = '';
+        showPublicStep('otpForm');
+
+      } catch (error) {
+        handleError(error);
+
+      } finally {
+        setLoading('sendRegistrationCodeButton', false);
+      }
+    }
+
+    async function validateAccessCode() {
+      hideStatus();
+
+      const code = byId('otpCode').value.replace(/\D/g, '');
+
+      if (code.length !== 6) {
+        showStatus(
+          'Digite o código de seis dígitos enviado por e-mail.',
+          'error'
+        );
+
+        return;
       }
 
-      // --- ÁREA FISCAL E PORTARIA ---
-      function ativarModoFiscal() {
-        const senha = prompt("Terminal Restrito. Digite a senha:");
-        if(!senha) return;
+      setLoading('validateCodeButton', true);
 
-        mostrarAviso('Verificando chaves de acesso...', 'loading');
-        executarChamadaAPI({ acao: 'obterEvento', senha: senha })
-          .then(res => {
-            document.getElementById('status').classList.add('hidden');
-            if(res.sucesso === false) {
-              alert("Acesso Negado: Senha Incorreta.");
-              destrancarBotoes();
-            } else {
-              senhaAutenticada = senha;
-              document.getElementById('areaPublica').classList.add('hidden');
-              document.getElementById('areaFiscal').classList.remove('hidden');
-              document.getElementById('subtitulo').innerText = "Terminal de Validação";
-              document.querySelector('.admin-link').classList.add('hidden');
-              document.getElementById('inputNomeEvento').value = res.evento;
-            }
-          }).catch(tratarFalhaServidor);
+      showStatus(
+        'Confirmando código...',
+        'loading'
+      );
+
+      try {
+        const response = await apiCall({
+          acao: 'validarCodigoAcesso',
+          identificador: state.identifier,
+          email: state.email,
+          codigo: code
+        });
+
+        if (!response.sucesso || !response.sessao) {
+          showStatus(
+            response.mensagem || 'Código inválido ou expirado.',
+            'error'
+          );
+
+          return;
+        }
+
+        state.publicSession = response.sessao;
+
+        await loadCredential();
+
+      } catch (error) {
+        handleError(error);
+
+      } finally {
+        setLoading('validateCodeButton', false);
+      }
+    }
+
+    async function loadCredential() {
+      showStatus(
+        'Liberando sua credencial...',
+        'loading'
+      );
+
+      try {
+        const response = await apiCall({
+          acao: 'obterCredencial',
+          sessao: state.publicSession
+        });
+
+        if (!response.sucesso || !response.qrcodeUrl) {
+          showStatus(
+            response.mensagem || 'Não foi possível carregar sua credencial.',
+            'error'
+          );
+
+          return;
+        }
+
+        byId('credentialQrImage').src = response.qrcodeUrl;
+
+        hideStatus();
+        showPublicStep('credentialScreen');
+
+      } catch (error) {
+        handleError(error);
+      }
+    }
+
+    async function resendCredentialEmail() {
+      if (!state.publicSession) {
+        showStatus(
+          'Sua sessão expirou. Faça login novamente para solicitar o QR Code.',
+          'error'
+        );
+
+        return;
       }
 
-      function atualizarNomeDoEvento() {
-        const novoNome = document.getElementById('inputNomeEvento').value.trim();
-        if(!novoNome) return;
-        
-        document.getElementById('btnMudarEvento').disabled = true;
-        mostrarAviso('Processando atualização de diretrizes...', 'loading');
-        
-        executarChamadaAPI({ acao: 'salvarEvento', novoNome: novoNome, senha: senhaAutenticada })
-          .then(res => {
-            document.getElementById('btnMudarEvento').disabled = false;
-            if(res.sucesso) {
-              document.getElementById('inputNomeEvento').value = res.novoEvento;
-              mostrarAviso('🚀 Evento atualizado para "' + res.novoEvento + '"!', 'sucesso');
-            } else {
-              mostrarAviso('❌ ' + res.mensagem, 'erro');
-            }
-            setTimeout(() => { document.getElementById('status').classList.add('hidden'); }, 3000);
-          }).catch(tratarFalhaServidor);
+      setLoading('resendCredentialButton', true);
+
+      showStatus(
+        'Enviando sua credencial por e-mail...',
+        'loading'
+      );
+
+      try {
+        const response = await apiCall({
+          acao: 'reenviarCredencialEmail',
+          sessao: state.publicSession
+        });
+
+        if (!response.sucesso) {
+          showStatus(
+            response.mensagem || 'Não foi possível reenviar a credencial.',
+            'error'
+          );
+
+          return;
+        }
+
+        showStatus(
+          response.mensagem || 'QR Code enviado para seu e-mail.',
+          'success'
+        );
+
+      } catch (error) {
+        handleError(error);
+
+      } finally {
+        setLoading('resendCredentialButton', false);
+      }
+    }
+
+    function returnToIdentity() {
+      hideStatus();
+      showPublicStep('identityForm');
+    }
+
+    function restartPublicFlow() {
+      state.identifier = '';
+      state.email = '';
+      state.publicSession = '';
+
+      byId('studentId').value = '';
+      byId('studentEmail').value = '';
+      byId('participantType').value = '';
+      byId('participantName').value = '';
+      byId('privacyConsent').checked = false;
+      byId('otpCode').value = '';
+      byId('credentialQrImage').src = '';
+
+      hideStatus();
+      showPublicStep('identityForm');
+    }
+
+    function openFiscalLogin() {
+      if (state.fiscalSession) {
+        return;
       }
 
-      function iniciarScannerFiscal() {
-        document.getElementById('reader').classList.remove('hidden');
-        document.getElementById('btnScanner').classList.add('hidden');
-        document.getElementById('status').classList.add('hidden');
-        
-        html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
-        
-        html5QrcodeScanner.render(textoDecodificado => {
-          html5QrcodeScanner.pause();
-          
-          let idExtraido = textoDecodificado;
-          if (textoDecodificado.includes("-")) {
-            idExtraido = textoDecodificado.split("-")[1]; 
+      const password = prompt(
+        'Terminal restrito. Digite a senha fiscal:'
+      );
+
+      if (!password) {
+        return;
+      }
+
+      showStatus(
+        'Validando acesso fiscal...',
+        'loading'
+      );
+
+      apiCall({
+        acao: 'loginFiscal',
+        senha: password
+      })
+        .then((response) => {
+          if (!response.sucesso || !response.sessao) {
+            showStatus(
+              response.mensagem || 'Credenciais inválidas.',
+              'error'
+            );
+
+            return;
           }
-          document.getElementById('idManualFiscal').value = idExtraido;
-          
-          mostrarAviso('Leitura efetuada. Fechando barreira...', 'loading');
 
-          html5QrcodeScanner.clear().then(() => {
-            document.getElementById('reader').classList.add('hidden');
-            document.getElementById('btnScanner').classList.remove('hidden');
-            validarPresencaFiscal(); 
-          }).catch(error => {
-            validarPresencaFiscal(); 
-          });
-          
-        }, erro => {});
+          state.fiscalSession = response.sessao;
+
+          byId('publicArea').classList.add('hidden');
+          byId('fiscalArea').classList.remove('hidden');
+
+          byId('subtitle').textContent =
+            'Terminal de Validação';
+
+          byId('eventName').value =
+            response.evento || '';
+
+          hideStatus();
+        })
+        .catch(handleError);
+    }
+
+    async function saveActiveEvent() {
+      const eventName = byId('eventName').value.trim();
+
+      if (!eventName) {
+        showStatus(
+          'Digite o nome do evento ativo.',
+          'error'
+        );
+
+        return;
       }
 
-      function validarPresencaFiscal() {
-        const id = document.getElementById('idManualFiscal').value.trim();
-        if(!id) return mostrarAviso('ID não detectado para validação.', 'erro');
-        
-        document.getElementById('btnCarimbarFiscal').disabled = true;
-        mostrarAviso('⏱️ Analisando dados na planilha central...', 'loading');
-        document.getElementById('idManualFiscal').value = ""; 
-        
-        executarChamadaAPI({ acao: 'carimbarPresenca', id: id, senha: senhaAutenticada })
-          .then(res => {
-            document.getElementById('btnCarimbarFiscal').disabled = false;
-            if(res.sucesso) {
-              mostrarAviso('✅ ' + res.mensagem, 'sucesso');
-            } else {
-              mostrarAviso('❌ ' + res.mensagem, 'erro');
-            }
-            setTimeout(() => { document.getElementById('status').classList.add('hidden'); }, 4000);
-          }).catch(tratarFalhaServidor);
+      setLoading('saveEventButton', true);
+
+      showStatus(
+        'Atualizando evento...',
+        'loading'
+      );
+
+      try {
+        const response = await apiCall({
+          acao: 'salvarEvento',
+          novoNome: eventName,
+          sessao: state.fiscalSession
+        });
+
+        if (!response.sucesso) {
+          showStatus(
+            response.mensagem || 'Não foi possível atualizar o evento.',
+            'error'
+          );
+
+          return;
+        }
+
+        byId('eventName').value =
+          response.novoEvento || eventName;
+
+        showStatus(
+          'Evento ativo atualizado com sucesso.',
+          'success'
+        );
+
+      } catch (error) {
+        handleError(error);
+
+      } finally {
+        setLoading('saveEventButton', false);
       }
-    </script>
-  </body>
+    }
+
+    function extractQrCredential(decodedText) {
+      const credential = String(decodedText || '').trim();
+
+      if (!credential.startsWith(QR_PREFIX)) {
+        return '';
+      }
+
+      const token = credential.substring(QR_PREFIX.length);
+
+      if (!/^[a-f0-9]{64}$/i.test(token)) {
+        return '';
+      }
+
+      return credential;
+    }
+
+    async function closeScanner() {
+      if (!state.scanner) {
+        return;
+      }
+
+      const scanner = state.scanner;
+
+      state.scanner = null;
+
+      try {
+        await scanner.clear();
+      } catch (error) {
+        console.warn(
+          'Aviso ao encerrar scanner:',
+          error
+        );
+      }
+
+      byId('reader').classList.add('hidden');
+      byId('scannerButton').classList.remove('hidden');
+    }
+
+    function startFiscalScanner() {
+      if (state.scanInProgress || state.scanner) {
+        return;
+      }
+
+      byId('reader').classList.remove('hidden');
+      byId('scannerButton').classList.add('hidden');
+
+      hideStatus();
+
+      state.scanner = new Html5QrcodeScanner(
+        'reader',
+        {
+          fps: 10,
+          qrbox: {
+            width: 250,
+            height: 250
+          }
+        },
+        false
+      );
+
+      state.scanner.render(
+        async (decodedText) => {
+          if (state.scanInProgress) {
+            return;
+          }
+
+          state.scanInProgress = true;
+
+          const credential = extractQrCredential(decodedText);
+
+          if (!credential) {
+            showStatus(
+              'QR Code não reconhecido como credencial LAIFT.',
+              'error'
+            );
+
+            state.scanInProgress = false;
+
+            return;
+          }
+
+          showStatus(
+            'Credencial lida. Validando presença...',
+            'loading'
+          );
+
+          await closeScanner();
+          await registerQrCheckin(credential);
+
+          state.scanInProgress = false;
+        },
+        () => {}
+      );
+    }
+
+    async function registerQrCheckin(credential) {
+      setLoading('manualCheckinButton', true);
+
+      try {
+        const response = await apiCall({
+          acao: 'carimbarPresenca',
+          credencial: credential,
+          sessao: state.fiscalSession
+        });
+
+        if (!response.sucesso) {
+          showStatus(
+            response.mensagem || 'Não foi possível registrar a presença.',
+            'error'
+          );
+
+          return;
+        }
+
+        showStatus(
+          response.mensagem || 'Presença confirmada.',
+          'success'
+        );
+
+      } catch (error) {
+        handleError(error);
+
+      } finally {
+        setLoading('manualCheckinButton', false);
+      }
+    }
+
+    async function submitManualCheckin() {
+      const identifier = byId('manualIdentifier').value.trim();
+
+      if (!identifier) {
+        showStatus(
+          'Digite a matrícula ou CPF do participante.',
+          'error'
+        );
+
+        return;
+      }
+
+      setLoading('manualCheckinButton', true);
+
+      showStatus(
+        'Registrando presença...',
+        'loading'
+      );
+
+      try {
+        const response = await apiCall({
+          acao: 'carimbarPresencaManual',
+          identificador: identifier,
+          sessao: state.fiscalSession
+        });
+
+        byId('manualIdentifier').value = '';
+
+        if (!response.sucesso) {
+          showStatus(
+            response.mensagem || 'Não foi possível registrar a presença.',
+            'error'
+          );
+
+          return;
+        }
+
+        showStatus(
+          response.mensagem || 'Presença confirmada.',
+          'success'
+        );
+
+      } catch (error) {
+        handleError(error);
+
+      } finally {
+        setLoading('manualCheckinButton', false);
+      }
+    }
+
+    function scheduleMemberSearch() {
+      clearTimeout(state.memberSearchTimer);
+
+      state.memberSearchTimer = setTimeout(() => {
+        searchMembers();
+      }, 350);
+    }
+
+    async function searchMembers() {
+      const term = byId('memberSearch').value.trim();
+      const list = byId('memberList');
+
+      if (term.length < 2) {
+        list.innerHTML = `
+          <div class="member-list-empty">
+            Digite ao menos dois caracteres para pesquisar participantes.
+          </div>
+        `;
+
+        return;
+      }
+
+      list.innerHTML = `
+        <div class="member-list-empty">
+          Buscando participantes...
+        </div>
+      `;
+
+      try {
+        const response = await apiCall({
+          acao: 'listarMembros',
+          termo: term,
+          sessao: state.fiscalSession
+        });
+
+        if (!response.sucesso) {
+          list.innerHTML = `
+            <div class="member-list-empty">
+              ${escapeHtml(
+                response.mensagem ||
+                'Não foi possível consultar a lista.'
+              )}
+            </div>
+          `;
+
+          return;
+        }
+
+        renderMemberList(response.membros || []);
+
+      } catch (error) {
+        console.error(error);
+
+        list.innerHTML = `
+          <div class="member-list-empty">
+            Não foi possível consultar a lista no momento.
+          </div>
+        `;
+      }
+    }
+
+    function renderMemberList(members) {
+      const list = byId('memberList');
+
+      if (!members.length) {
+        list.innerHTML = `
+          <div class="member-list-empty">
+            Nenhum participante encontrado.
+          </div>
+        `;
+
+        return;
+      }
+
+      list.innerHTML = '';
+
+      members.forEach((member) => {
+        const item = document.createElement('div');
+
+        item.className = 'member-item';
+
+        const info = document.createElement('div');
+
+        info.className = 'member-info';
+
+        const name = document.createElement('div');
+
+        name.className = 'member-name';
+        name.textContent = member.nomeExibicao || 'Participante';
+
+        const meta = document.createElement('div');
+
+        meta.className = 'member-meta';
+
+        meta.textContent =
+          (member.tipo || 'Participante') +
+          ' · ' +
+          (member.identificador || '');
+
+        info.appendChild(name);
+        info.appendChild(meta);
+
+        const button = document.createElement('button');
+
+        button.type = 'button';
+        button.textContent = 'Presença';
+
+        button.addEventListener('click', () => {
+          markPresenceFromList(member.identificador);
+        });
+
+        item.appendChild(info);
+        item.appendChild(button);
+
+        list.appendChild(item);
+      });
+    }
+
+    async function markPresenceFromList(identifier) {
+      if (!identifier) {
+        return;
+      }
+
+      showStatus(
+        'Registrando presença pela lista...',
+        'loading'
+      );
+
+      try {
+        const response = await apiCall({
+          acao: 'marcarPresencaLista',
+          identificador: identifier,
+          sessao: state.fiscalSession
+        });
+
+        if (!response.sucesso) {
+          showStatus(
+            response.mensagem || 'Não foi possível registrar a presença.',
+            'error'
+          );
+
+          return;
+        }
+
+        showStatus(
+          response.mensagem || 'Presença confirmada.',
+          'success'
+        );
+
+      } catch (error) {
+        handleError(error);
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    async function logoutFiscal() {
+      await closeScanner();
+
+      state.fiscalSession = '';
+      state.scanInProgress = false;
+
+      byId('fiscalArea').classList.add('hidden');
+      byId('publicArea').classList.remove('hidden');
+
+      byId('subtitle').textContent =
+        'Portal de Credencial Acadêmica';
+
+      byId('eventName').value = '';
+      byId('manualIdentifier').value = '';
+      byId('memberSearch').value = '';
+
+      byId('memberList').innerHTML = `
+        <div class="member-list-empty">
+          Digite ao menos dois caracteres para pesquisar participantes.
+        </div>
+      `;
+
+      restartPublicFlow();
+    }
+
+    let logoPressTimer = null;
+
+    /*
+      COMPUTADOR:
+      Dois cliques no texto LAIFT.
+    */
+    byId('laiftLogo').addEventListener('dblclick', () => {
+      openFiscalLogin();
+    });
+
+    /*
+      TECLADO:
+      Enter ou espaço quando LAIFT estiver selecionado.
+    */
+    byId('laiftLogo').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openFiscalLogin();
+      }
+    });
+
+    /*
+      CELULAR/TABLET:
+      Toque longo de 0,7 segundo no texto LAIFT.
+    */
+    byId('laiftLogo').addEventListener(
+      'touchstart',
+      () => {
+        if (state.fiscalSession) {
+          return;
+        }
+
+        logoPressTimer = setTimeout(() => {
+          openFiscalLogin();
+        }, 700);
+      },
+      { passive: true }
+    );
+
+    byId('laiftLogo').addEventListener(
+      'touchend',
+      () => {
+        clearTimeout(logoPressTimer);
+      },
+      { passive: true }
+    );
+
+    byId('laiftLogo').addEventListener(
+      'touchcancel',
+      () => {
+        clearTimeout(logoPressTimer);
+      },
+      { passive: true }
+    );
+
+    byId('otpCode').addEventListener('input', (event) => {
+      event.target.value = event.target.value.replace(/\D/g, '');
+    });
+
+    byId('otpCode').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        validateAccessCode();
+      }
+    });
+
+    byId('studentEmail').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        requestAccessCode();
+      }
+    });
+
+    byId('manualIdentifier').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        submitManualCheckin();
+      }
+    });
+  </script>
+</body>
 </html>
