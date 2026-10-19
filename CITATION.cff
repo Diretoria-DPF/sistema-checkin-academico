@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "Se você usar este projeto, cite-o com os dados abaixo."
+type: software
+title: "Sistema de Check-in Inteligente"
+abstract: "Sistema de check-in de eventos acadêmicos por QR Code, com frontend estático e regras de negócio em backend separado."
+authors:
+  - family-names: "Francisco"
+    given-names: "Daniel Pires"
+    affiliation: "UNINASSAU Salvador; LAIFT"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"  # descomente e preencha quando o ORCID existir
+repository-code: "https://github.com/Diretoria-DPF/sistema-checkin-academico"
+url: "https://dpflabs.com"
+keywords:
+  - qr-code
+  - checkin
+  - eventos-academicos
