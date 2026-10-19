@@ -29,7 +29,7 @@ O frontend está hospedado e vivo no GitHub Pages.
 3. *Nota:* A interface administrativa (Modo Fiscal) requer credenciais de acesso operacionais da diretoria da instituição onde o sistema foi implantado.
 
 ## 🔗 Autoria e projeto
-Criado por **Daniel Pires Francisco** (Daniel P Francisco), Presidente da LAIFT e graduando em Farmácia na UNINASSAU Salvador.
+Criado por **Daniel Pires Francisco**, Presidente da LAIFT e graduando em Farmácia na UNINASSAU Salvador.
 - Portfólio, currículo e serviços: https://dpflabs.com
 - Plataforma LAIFT: https://laift.com.br
 - Lattes: http://lattes.cnpq.br/5041510175000740
